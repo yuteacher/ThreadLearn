@@ -1,0 +1,18 @@
+4.4工作原理
+	当主程序启动时，我们创建了两个任务，并为第一个任务设置了一个后续操作(continuation,一个代码块，会在当前任务完成后运行)。然后启动这两个任务并等待4秒，这个时间足够两个任务完成。
+然后给第二个任务运行另一个后续操作，并通过指定TaskContinuationOptions.ExecuteSynchronously选项来尝试同步执行该后续操作。如果后续操作耗时非常短暂，使用以上方式是非常有用的，因为放置在主线程中运行比放置在线程池中运行要快。
+可以实现这一点是因为第二个任务恰好在那刻完成。如果注释掉4秒的Thread.Sleep方法，将会看到该代码被放置到线程池中，这是因为还未从之前的任务中得到结果。
+最后我们为之前的后续操作也定义了一个后续操作，但这里使用了一个稍微不同的方式，即使用了新的GetAwaiter 和OnCompleted方法。这些方法是C#5.0语言中异步机制中的方法。第5章中将会覆盖该主题。
+本节示例的最后部分与父子线程有关。我们创建了一个新任务，当运行该任务时，通过提供一个 TaskCreationOptions.AttachedToParent 选项来运行一个所谓的子任务。
+子任务必须在父任务运行时创建，并正确的附加给父任务!
+这意味着只有所有子任务结束工作，父任务才会完成。通过提供一个TaskContinuationOptions选项也可以给在子任务上运行后续操作。该后续操作也会影响父任务，并且直到最后一个子任务结束它才会运行完成。
+
+
+TaskContinuationOptions：
+	为通过使用 ContinueWith(Action<Task>, CancellationToken, TaskContinuationOptions, TaskScheduler) 或 ContinueWith(Action<Task<TResult>>, TaskContinuationOptions) 方法创建的任务指定行为。
+	ExecuteSynchronously:指定应同步执行延续任务。 指定此选项后，延续任务在导致前面的任务转换为其最终状态的相同线程上运行。 如果在创建延续任务时已经完成前面的任务，则延续任务将在创建此延续任务的线程上运行。 如果前面任务的 CancellationTokenSource 已在一个 finally（在 Visual Basic 中为 Finally）块中释放，则使用此选项的延续任务将在该 finally 块中运行。 只应同步执行运行时间非常短的延续任务。
+由于任务以同步方式执行，因此无需调用诸如 Wait() 的方法来确保调用线程等待任务完成。
+	AttachedToParent:如果延续为子任务，则指定将延续附加到任务层次结构中的父级。 只有当延续前面的任务也是子任务时，延续才可以是子任务。 默认情况下，子任务（即由外部任务创建的内部任务）将独立于其父任务执行。 可以使用 AttachedToParent 选项以便将父任务和子任务同步。
+请注意，如果使用 DenyChildAttach 选项配置父任务，则子任务中的 AttachedToParent 选项不起作用，并且子任务将作为分离的子任务执行。
+	OnlyOnRanToCompletion:指定只应在延续任务前面的任务已完成运行的情况下才安排延续任务。 如果前面任务完成的 Status 属性是 RanToCompletion，则前面的任务会运行直至完成。 此选项对多任务延续无效。
+	具体使用文档参考CSDN:https://learn.microsoft.com/zh-cn/dotnet/api/system.threading.tasks.taskcontinuationoptions?view=net-7.0
