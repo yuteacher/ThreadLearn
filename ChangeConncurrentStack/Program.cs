@@ -7,7 +7,8 @@ namespace ChangeConncurrentStack
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Task t = RunProgrom();
+            t.Wait();
         }
         static async Task RunProgrom()
         {
@@ -15,7 +16,7 @@ namespace ChangeConncurrentStack
             var cts= new CancellationTokenSource();
             var taskSource = Task.Run(() => TaskProducer(taskStack));
             Task[] proccessors = new Task[4];
-            for (int i = 0; i < proccessors.Length; i++)
+            for (int i = 1; i <=4; i++)
             {
                 string processorid = i.ToString();
                 proccessors[i - 1] = Task.Run(() => TaskProcessor(taskStack, "Processor" + processorid, cts.Token));
@@ -27,11 +28,28 @@ namespace ChangeConncurrentStack
         }
         static async Task TaskProducer( ConcurrentStack<CustomTask> stack)
         {
-
+            for (int i = 1; i <= 20; i++)
+            {
+                await Task.Delay(50);
+                var workitem = new CustomTask { Id = i };
+                stack.Push(workitem);
+                Console.WriteLine("Task {0} has been posted", workitem.Id);
+            }
         }
         static async Task TaskProcessor( ConcurrentStack<CustomTask> stack, string name , CancellationToken token)
         {
-
+            await GetRandomDelay();
+            do
+            {
+                CustomTask workItem;
+                bool popSuccesful =stack.TryPop(out workItem);
+                if (popSuccesful)
+                {
+                    Console.WriteLine("Task {0} has been processed by {1}", workItem.Id,name);
+                }
+                await GetRandomDelay();
+            }
+            while(!token.IsCancellationRequested);
         }
         static Task GetRandomDelay()
         {

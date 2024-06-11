@@ -31,5 +31,5 @@ static int TaskMethod(string name, int seconds)
     Console.WriteLine("Task{0} is running on a thread id{1}.Is thread pool thread:{2}", name, Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.IsThreadPoolThread);
     Thread.Sleep(TimeSpan.FromSeconds(seconds));
     throw new Exception("Boom!");
-    return 42 * seconds;
+    //return 42 * seconds;
 }
