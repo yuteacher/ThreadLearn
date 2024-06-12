@@ -1,0 +1,4 @@
+﻿5.3工作原理
+	首先我们对从一5到4的一组数字运行了一个平常的LINQ查洵。当除以0时，得到了DivideByZeroExcepuon异常并使用try/catch代码块这种通常的方式来处理
+该异常。然而，当使用AsParaIlel运行，我们得到的却是AggregateExcepnon.因为现在是以并行的方式运行，受到了幕后的任务基础设施的影响。AggregateException
+将包含运行PLINQ查询期间发生的所有异常。我们可以使用F1a№n和Hand1e方法来处理内部的Dw1deByZeroException类。

@@ -1,0 +1,9 @@
+﻿8.2 工作原理
+	我们使用EnumerableEventSequence 方法模拟了一个效率不高的可枚举的集合。然后使用常用的 foreach 循环来迭代它，可以看到这一如既往的慢。等待直到所有迭代完成。然后借助于ReactiveExtensions库中的
+ToObservable扩展方法把可枚举的集合转换为可观察的集合。接下来订阅该可观察集合的更新，提供Console.Write方法作为操作，其将在每次更新该集合时被执行。结果我们得到了与上一个例子完全一样的行为。我们会等待
+所有迭代完成，因为我们使用了主线程来订阅这些更新。
+	我们使用using声明来封装这些订阅对象。尽管不总是必要的，但是及时消除这些订阅是一个好的实践，因为可以避免生命周期相关的错误。
+	为了异步化该程序，我们使用SubscribeOn方法并提供其TPL任务池调度程序。该调度程序将把订阅信息放置到TPL任务池中，卸除主线程的任务。这可以使U在集合更新时仍保持响应并做些其他事情。为了检查该行为，你
+	可以从代码中除移最后的Console.ReadLine调用。这样主线程会立即完成，从而强制所有的后台线程(包括TPL任务池工作线程)也一起结束，我们将不会从异步集合中得到任何输出。
+	如果使用了任何U1框架，就只能从U线程与U控制器进行交互。为了实现该点，我们应该对相应的调度程序使用ObserveOn方法。对于Windows PresentationFoundation，我们拥有定义在名为
+Rx-XAML(或Reactive ExtensionsXAML支持库)的单独的 NuGet 包中的 DispatcherScheduler 类和 ObserveOnDispatcher扩展方法。其他的平台也有相应的单独的NuGet 包。
