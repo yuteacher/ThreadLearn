@@ -1,0 +1,12 @@
+﻿9．3工作原理
+	这里我们通过HttpListener类实现了一个非常简单的web服务器。也使用了TcpListener类进行TCP套接字I℃操作我们配置该监听器接收任何主机到本地机器1234端口的连接然后在单独的工作线程中启动该监听器，从而在主线程中可
+以控制该监听器
+	当使用GetContextAsync方法时会发生异步I/O操作。遗憾的是，其并不接收CanceIIationToken从而实现取消功能。所以如果想关闭该服务器，只需调用_listener.Abort方法，这将丢弃所有连接并关闭该服务器
+	为了对该服务器执行一个异步请求，我们使用了统一命名空间下的System.Net.Http集合中的HttpClient类。我们使用Get.Async方法来发起一个异步的HTTPGET请求。还有其他的方法用于发起其他HTTP请求，比如POST、DELETE以及
+PUT.HttpClient还有很多其他的选项，比如使用不同的格式（比如XML和JSON)来序列化和反序列化对象，指定代理服务器地址，认证以及其他配置。
+	当运行该程序时，可以看到该服务器被启动起来。在服务器端代码中，我们使用GetCntextAsync方法来接收新的客户端连接。当有新的客户端连接时该方法就会返回，我们简单的输出一个包含当前日期和时间的非常基础的HTML作为
+响应。然后我们请求服务器并打印出响应头和内容。你也可以打开浏览器访问Http://localhost:1234/地址.你将看到相同的响应结果显示在浏览器窗口。
+
+注意：生成的exe程序在管理员权限下正常运行，否则无法访问该地址。若在Debug模式下查看，需将地址添加到urlacl中。
+	管理员权限下运行CMD：netsh http add urlacl url=http://+:1234/user=本机名称 或 Everyone.
+参考地址：https://blog.csdn.net/swordsf/article/details/77413738
