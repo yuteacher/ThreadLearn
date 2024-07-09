@@ -1,0 +1,8 @@
+﻿2.5 工作原理
+	当主程序启动时，定义了两个AutoResetEvent实例。其中一个是从子线程向主线程发信号，另一个实例是从主线程向子线程发信号。我们向AutoResetEvent构造方法传人false定义了这两个实例的初始状态为unsignaled。
+这意味着任何线程调用这两个对象中的任何一个的 WaitOne方法将会被阻塞，直到我们调用了Sct方法。如果初始事件状态为true，那么AutoResetEvent 实例的状态为signaled，如果线程调用 WaitOne方法则会被立即处理。
+然后事件状态自动变为unsignaled，所以需要再对该实例调用一次Set方法，以便让其他的线程对该实例调用 WaitOne 方法从而继续执行。
+	然后我们创建了第二个线程，其会执行第一个操作10秒钟，然后等待从第二个线程发出的信号。该信号意味着第一个操作已经完成。现在第二个线程在等待主线程的信号。我们对主线程做了一些附加工作，并通过调用mainEvent.Set
+方法发送了一个信号。然后等待从第二个线程发出的另一个信号。AutoResetEvent类采用的是内核时间模式，所以等待时间不能太长。使用2.6节中的ManualResetEventslim类更好，因为它使用的是混合模式。
+
+注：当创建AutoResetEvent的构造函数为ture，无信号时，使用waitone不会阻塞当前线程并修改为nonsignaled。为false时，会阻塞当前线程等待set释放。

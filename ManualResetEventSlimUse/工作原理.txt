@@ -1,0 +1,5 @@
+﻿2.6工作原理
+	当主程序启动时，首先创建了ManualResetEventSlim类的一个实例。然后启动了三个线程，等待事件信号通知它们继续执行。
+	ManualResetEvetSlim的整个工作方式有点像人群通过大门。2.5节中讨论过的AutoResetEvent事件像一个旋转门，一次只允许一人通过。ManualResetEventSlim是Manual-ResetEvent的混合版本，一直保持大门敞开直到手动调用Reset
+方法。当调用mainEvent.Set时，相当于打开了大门从而允许准备好的线程接收信号并继续工作。然而线程3还处于睡眠状态，没有赶上时间。当调用mainEvent.Reset相当于关闭了大门。最后一个线程已经准备好执行，但是不得不等待下
+一个信号，即要等待好几秒钟。
