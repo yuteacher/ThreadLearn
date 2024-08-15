@@ -1,0 +1,14 @@
+﻿3.2 工作原理
+	当程序运行时，使用旧的方式创建了一个线程，然后启动它并等待完成。由于线程的构造函数只接受一个无任何返回结果的方法，我们使用了lambda表达式来将对Test方法的调用包起来。我们通过打印出Thread.CurrentThread.lsThreadPoolThread属性
+值来确保该线程不是来自线程池。我们也打印出了受管理的线程ID来识别代码是被哪个线程执行的。
+	然后定义了一个委托并调用 BeginInvoke方法来运行该委托。BeginInvoke方法接受一个回调函数。该回调函数会在异步操作完成后会被调用，并且一个用户自定义的状态会传给该回调函数。该状态通常用于区分异步调用。结果，我们得到了一个实现了
+IAsyncResult 接口的 result 对象。BeginInvoke 立即返回了结果，当线程池中的工作线程在执行异步操作时，仍允许我们继续其他工作。当需要异步操作的结果时，可以使用BeginInvoke方法调用返回的result 对象。我们可以使用result对象的
+IsCompleted属性轮询结果。但是在本例子中，使用的是 AsycWaitHandle属性来等待直到操作完成。当操作完成后，会得到一个结果，可以通过委托调用 EndInvoke 方法，将IAsyncResult对象传递给委托参数。
+	事实上使用AsyncWaitHandle并不是必要的。如果注释掉r.AsyncWaitHandle.WaitOne代码照样可以成功运行，因为EndInvoke方法事实上会等待异步操作完成。调用EndInvoke方法(或者针对其他异步API的EndOperationName方法)是非常重要的，因为该方
+法会将任何未处理的异常抛回到调用线程中。当使用这种异步API时，请确保始终调用了Begin和End方法。
+	当操作完成后，传递给BeginInvoke方法的回调函数将被放置到线程池中，确切地说是-个工作线程中。如果在 Main方法定义的结尾注释掉 Thread.Sleep方法调用，回调函数将不会被执行。这是因为当主线程完成后，所有的后台线程会被停止，包括该回
+调函数。对委托和回调函数的异步调用很可能会被同一个工作线程执行。通过工作线程ID可以容易地看出。使用 BeginOperationName/EndOperationName方法和.NET中的IAsyncResult 对象等方式被称为异步编程模型(或APM模式)，这样的方法对被称为异步
+方法。该模式也被应用于多个.NET类库的 API中，但在现代编程中，更推荐使用任务并行库(TaskParallel Library简称TPL)来组织异步AP1。第4章将会讨论该主题。
+
+
+注：该方式已弃用，在下一节用闭包方式实现

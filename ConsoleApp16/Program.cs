@@ -6,20 +6,65 @@ namespace ConsoleApp16
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            var t=ProcessAsynchronously();
+            t.GetAwaiter().GetResult();
+
+            Console.WriteLine("Press ENTER to  exit");
+            Console.ReadLine();
         }
         static async Task ProcessAsynchronously()
         {
             var unsafeState = new UnsafeState();
+            Task[] tasks = new Task[4];
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                tasks[i] = Task.Factory.StartNew(() => Worker(unsafeState));
+            }
+            await Task.WhenAll(tasks);
+            Console.WriteLine("-------------");
+
+            var firstState = new DoubleCheckedLocking();
+            for (int i = 0; i < 4; i++)
+            {
+                tasks[i] = Task.Factory.StartNew(() => Worker(firstState));
+            }
+            await Task.WhenAll(tasks);
+            Console.WriteLine("-------------");
+
+            var secondState = new BCLDoubleChecked();
+            for (int i = 0; i < 4; i++)
+            {
+                tasks[i] = Task.Factory.StartNew(() => Worker(secondState));
+            }
+            await Task.WhenAll(tasks);
+            Console.WriteLine("-------------");
+
+            var thirdState = new Lazy<ValueToAccess>(Compute);
+            for (int i = 0; i < 4; i++)
+            {
+                tasks[i] = Task.Factory.StartNew(() => Worker(thirdState));
+            }
+            await Task.WhenAll(tasks);
+            Console.WriteLine("-------------");
+
+            var fourthState = new BCLThreadSafeFactory();
+            for (int i = 0; i < 4; i++)
+            {
+                tasks[i] = Task.Factory.StartNew(() => Worker(fourthState));
+            }
+            await Task.WhenAll(tasks);
+            Console.WriteLine("-------------");
 
         }
         static void Worker(IHasValue state)
         {
-
+            Console.WriteLine("Worker runs on thread id {0}", Thread.CurrentThread.ManagedThreadId);
+            Console.WriteLine("State value :{0}", state.Value.Text);
         }
         static void Worker(Lazy<ValueToAccess> state)
         {
-
+            Console.WriteLine("Worker runs on thread id {0}", Thread.CurrentThread.ManagedThreadId);
+            Console.WriteLine("State value :{0}", state.Value.Text);
         }
         static ValueToAccess Compute()
         {
@@ -58,6 +103,14 @@ namespace ConsoleApp16
             public ValueToAccess Value
             {
                 get { return LazyInitializer.EnsureInitialized(ref _Value, ref _initialized ,ref _syncRoot,Compute); }
+            }
+        }
+        class BCLThreadSafeFactory : IHasValue
+        {
+            private ValueToAccess _Value;
+            public ValueToAccess Value
+            {
+                get { return LazyInitializer.EnsureInitialized(ref _Value, Compute); }
             }
         }
     }
